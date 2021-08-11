@@ -1,7 +1,9 @@
 package com.lewis.validation.validation.exceptionhandler;
 
+import com.lewis.validation.validation.i18n.I18nMessageResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 @ControllerAdvice
 public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @Autowired
+    private I18nMessageResolver i18nMessageResolver;
 
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<ExceptionDetail> exceptionHandler(Exception ex, HttpServletRequest request, HttpServletResponse response) {
@@ -39,14 +43,13 @@ public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private String extractErrorMessage(Exception ex) {
-        /*String[] errMsgArgs;
-        if (ex instanceof BaseException) {
+        String[] errMsgArgs = null;
+        /*if (ex instanceof BaseException) {
             errMsgArgs = ((BaseException) ex).getErrMsgArgs();
         } else {
             errMsgArgs = null;
         }*/
-        //String message = i18nMessageResolver.getMessage(exceptionPropertyName(ex.getMessage()), (Object[]) errMsgArgs);
-        String message = "";
+        String message = i18nMessageResolver.getMessage(exceptionPropertyName(ex.getMessage()), (Object[]) errMsgArgs);
         if (StringUtils.isBlank(message)) {
             /*if (ex instanceof BaseException) {
                 message = ex.getMessage();
@@ -56,6 +59,10 @@ public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
             message = "An error was encountered when processing your request";
         }
         return message;
+    }
+
+    private static String exceptionPropertyName(String e) {
+        return "exception." + e;
     }
 
     private ResponseEntity<ExceptionDetail> exceptionResponse(HttpStatus status, String message,
